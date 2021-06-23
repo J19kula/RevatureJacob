@@ -1,13 +1,15 @@
 import { QueryCommand, DeleteCommand, PutCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
 import Team, {ITeam} from "@entities/Team";
 import {ddbDoc} from "@daos/db/dynamo";
+import { String } from "aws-sdk/clients/appstream";
 
 export interface ITeamsDaos{
-    getOne: (name: string) => Promise<ITeam|null>;
+    getOneTeam: (name: string) => Promise<ITeam[]|null>;
+    getOne: (name:string) => Promise<ITeam|null>;
     getAll: () => Promise<ITeam[]>;
     add: (iTeam: ITeam) => Promise<void>;
     update: (iTeam: ITeam) => Promise<void>;
-    delete: (name: string) => Promise<void>;
+    delete: (name: String) => Promise<void>;
     setID: () => Promise<number>;
     getID: (name: string) => Promise<number>;
 }
@@ -16,25 +18,48 @@ export interface ITeamsDaos{
 class TeamDao implements ITeamsDaos {
     private TableName = 'FifaTeamList';
 
+    public async getOneTeam(name: string): Promise<ITeam[]|null>{
+        const params = {
+            TableName: this.TableName,
+            FilterExpression: "teamName = :teamName",
+            ExpressionAttributeValues: {
+                ':teamName': name,
+            }, 
+        };
+
+        const data = await ddbDoc.send(new ScanCommand(params));
+        let TeamData:Team[] = [];
+
+        if(data.Items !== undefined){
+            for(let i of data.Items){
+                TeamData.push(new Team(i.teamName, i.price, i.firstName, i.lastName, i.id));
+                };
+                return Promise.resolve(TeamData)
+            }
+            return Promise.resolve(null);
+    }
+
     public async getOne(name: string): Promise<ITeam|null>{
         const params = {
             TableName: this.TableName,
-            TeamName: {
-                ':teamName': name
+            FilterExpression: "teamName = :teamName",
+            ExpressionAttributeValues: {
+                ':teamName': name,
             }, 
-    };
+        };
 
-    const data = await ddbDoc.send(new QueryCommand(params));
-    let TeamData:ITeam;
+        const data = await ddbDoc.send(new ScanCommand(params));
+        let TeamData:Team;
 
-    if(data.Items !== undefined){
-        for(let i of data.Items){
-            TeamData = new Team(i.teamNAME, i.price, i.firstName, i.lastName, i.id);
-            return Promise.resolve(TeamData);
+        if(data.Items !== undefined){
+            for(let i of data.Items){
+                TeamData = (new Team(i.teamName, i.price, i.firstName, i.lastName, i.id));
+                return Promise.resolve(TeamData)
+                };
             }
-        }
-        return Promise.resolve(null);
+            return Promise.resolve(null);
     }
+
     public async add(iteam: ITeam): Promise<void>{
         const params = {
             TableName: this.TableName,
@@ -92,7 +117,7 @@ class TeamDao implements ITeamsDaos {
             const params = {
                 TableName: this.TableName,
                 Key: {
-                    teamName: iTeam.teamName
+                    id: iTeam.id,
                 }
             };
             try{

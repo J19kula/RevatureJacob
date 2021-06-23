@@ -1,14 +1,15 @@
 import { Router } from 'express';
-import { addOneTeam, getTeam, updateTeam, deleteTeam, getAllTeams } from './team';
+import { addOneTeam, getTeam, updateTeam, deleteTeam, getAllTeams, getPlayer } from './team';
 
 
 // User-route
 const userRouter = Router();
-userRouter.get('/:Team', getAllTeams)
+userRouter.get('/getTeam/:teamName', getTeam)
+userRouter.get('/getPlayer/:teamName', getPlayer)
 userRouter.post('/add', addOneTeam);
-userRouter.get('/getTeam', getTeam);
-userRouter.put('/:Teams/:id', updateTeam);
-userRouter.delete('/delete/:Teams/:id', deleteTeam);
+userRouter.get('/getTeam', getAllTeams);
+userRouter.put('/:teamName/:id', updateTeam);
+userRouter.delete('/delete/:teamName/:id', deleteTeam);
 
 
 // Export the base-router

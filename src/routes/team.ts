@@ -35,14 +35,14 @@ export async function addOneTeam(req:Request, res:Response) {
  * @returns ITeam
  */
 export async function getTeam(req:Request, res:Response) {
-    const {teamName} = req.body.team;
-    if(!teamName){
-        return res.status(BAD_REQUEST).json({
-            error: paramMissingError,
-            
-        });
-    }
-    let team:ITeam|null = await TD.getOne(teamName);
+    const teamName = req.params.teamName;
+    const team =  await TD.getOneTeam(teamName);
+    return res.status(OK).json(team).end();  
+}
+
+export async function getPlayer(req:Request, res:Response) {
+    const teamName = req.params.teamName;
+    const team =  await TD.getOne(teamName);
     return res.status(OK).json(team).end();  
 }
 
